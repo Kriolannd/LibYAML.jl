@@ -1,0 +1,8 @@
+name = "LibYAML"
+uuid = "cdab51f1-1827-4e04-b29f-599d20126cf0"
+authors = ["ramzes <ramzes@engee.cloud>"]
+version = "0.1.0"
+
+[deps]
+CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
+LibYAML_jll = "f531010a-71ee-5b11-8e71-2f13f29d8a82"
