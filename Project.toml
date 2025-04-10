@@ -1,6 +1,6 @@
 name = "LibYAML"
 uuid = "cdab51f1-1827-4e04-b29f-599d20126cf0"
-authors = ["ramzes <ramzes@engee.cloud>"]
+authors = ["karelio <Kriolannd@yandex.ru>"]
 version = "0.1.0"
 
 [deps]
