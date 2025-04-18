@@ -1,5 +1,4 @@
-# LibYAML.jl
-Julia wrapper package for parsing `yaml` files 
+# LibYAML.jl 
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://Kriolannd.github.io/LibYAML.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://Kriolannd.github.io/LibYAML.jl/dev/)
@@ -7,7 +6,7 @@ Julia wrapper package for parsing `yaml` files
 [![Coverage](https://codecov.io/gh/Kriolannd/LibYAML.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Kriolannd/LibYAML.jl)
 [![Registry](https://img.shields.io/badge/registry-General-4063d8)](https://github.com/JuliaRegistries/General)
 
-👉 Here you can briefly describe the main idea of the package
+Julia wrapper package for parsing `yaml` files
 
 ## Installation
 
