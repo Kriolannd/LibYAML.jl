@@ -39,7 +39,7 @@ retExtInfo: {}
 time: "2024-03-25T19:05:38.912999936"
 """
 
-julia> parse_yaml_str(yaml_str)
+julia> parse_yaml(yaml_str)
 1-element Vector{Dict{Any, Any}}:
  Dict(
   "retExtInfo" => Dict{Any, Any}(),
