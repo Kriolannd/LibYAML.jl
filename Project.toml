@@ -1,0 +1,8 @@
+name = "LibYAML"
+uuid = "42d63396-a25e-4f20-b08f-81fd7e982f95"
+version = "0.1.0"
+
+[deps]
+
+[compat]
+julia = "1.8"
