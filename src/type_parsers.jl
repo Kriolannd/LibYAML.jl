@@ -67,3 +67,14 @@ end
 
     return DateTime(year, month, day, hour, min, sec, ms)
 end
+
+@inline function parse_include(rel_path::String, file_dir)
+    path = joinpath(file_dir, rel_path)
+    isfile(path) || throw(YAMLError("File not found: $path"))
+
+    included_yaml = read(path)
+    included_docs = parse_yaml_str(included_yaml, dirname(path))
+    length(included_docs) == 1 || throw(YAMLError("Expected a single-document YAML file"))
+
+    return included_docs[1]
+end

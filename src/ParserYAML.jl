@@ -15,7 +15,11 @@ export parse_yaml,
     YAMLScannerError,
     YAMLParserError
 
-@inline function init_parser(yaml_str::AbstractString)
+const POSSIBLE_RETURN_TYPES = Union{Dict{String, Any}, Vector{Any}, Nothing}
+
+#__ YAML parsers __#
+
+@inline function init_parser(yaml_str::AbstractVector{UInt8})
     parser = Ref{YAMLParser}()
     success = yaml_parser_initialize(parser)
     success == 0 && throw_yaml_err(parser)
@@ -25,7 +29,7 @@ export parse_yaml,
 end
 
 @inline function parse_documents(parser, file_dir)
-    docs = Any[]
+    docs = POSSIBLE_RETURN_TYPES[]
 
     while true
         doc = Ref{YAMLDocument}()
@@ -47,11 +51,10 @@ end
     return docs
 end
 
-function parse_yaml_str(yaml_str::AbstractString, file_dir)
+function parse_yaml_str(yaml_str::AbstractVector{UInt8}, file_dir)
     parser = init_parser(yaml_str)
-    docs = Any[]
     try
-        docs = parse_documents(parser, file_dir)
+        return parse_documents(parser, file_dir)
     finally
         yaml_parser_delete(parser)
     end
@@ -95,12 +98,12 @@ end
     tag = unsafe_string(node.tag)
     value = unsafe_string(node.data.scalar.value)
 
-    parse_value(resolve(value, tag), value, file_dir)
+    parse_value(resolve_tag(value, tag), value, file_dir)
 end
 
 @inline function parse_sequence(doc::Ref{YAMLDocument}, node::YAMLNode, file_dir)
     items = node.data.sequence.items
-    len = get_c_arr_size(items.start, items.top, sizeof(Cuint))
+    len = c_array_length(items.start, items.top, sizeof(Cuint))
 
     items_ptr = items.start
     yaml_arr = Vector{Any}(undef, len)
@@ -115,7 +118,7 @@ end
 
 @inline function parse_mapping(doc::Ref{YAMLDocument}, node::YAMLNode, file_dir)
     pairs = node.data.mapping.pairs
-    len = get_c_arr_size(pairs.start, pairs.top, sizeof(YAMLNodePair))
+    len = c_array_length(pairs.start, pairs.top, sizeof(YAMLNodePair))
 
     pairs_ptr = pairs.start
     yaml_dict = Dict{String, Any}()
@@ -130,7 +133,7 @@ end
         val = parse_node(doc, val_ptr, file_dir)
 
         if key == "<<" 
-            make_merge!(yaml_dict, val, val_node.type)
+            merge_anchor!(yaml_dict, val, val_node.type)
         else
             yaml_dict[key] = val
         end
@@ -139,7 +142,9 @@ end
     return yaml_dict
 end
 
-@inline function make_merge!(yaml_dict, val, type)
+#__ YAML helpers __#
+
+@inline function merge_anchor!(yaml_dict, val, type)
     if type == YAML_MAPPING_NODE
         merge!(yaml_dict, val)
     elseif type == YAML_SEQUENCE_NODE
@@ -151,24 +156,20 @@ end
     return nothing
 end
 
-@inline get_c_arr_size(start, top, size) = (top - start) ÷ size
+@inline c_array_length(start, top, size) = (top - start) ÷ size
 
-@inline function parse_include(rel_path::String, file_dir)
-    path = joinpath(file_dir, rel_path)
-    isfile(path) || throw(YAMLError("File not found: $path"))
-
-    included_yaml = read(path, String)
-    included_docs = parse_yaml_str(included_yaml, dirname(path))
-    length(included_docs) == 1 || throw(YAMLError("Expected a single-document YAML file"))
-
-    return included_docs[1]
-end
+#__ YAML interface __#
 
 """
     parse_yaml(yaml_str::String)
     parse_yaml(yaml_str::Vector{UInt8})
 
-Parse a YAML string or file (or vector of `UInt8`) into a dictionary.
+Parse a YAML string or file (or vector of `UInt8`) into a dictionary, vector or nothing. 
+- If a given YAML document contains a dictionary, the parser returns a dictionary.
+- If a given YAML document contains just a list of variables, the parser returns a vector.
+- If a given YAML document contains no information (i.e. empty), the parser returns nothing
+or empty dictionary.
+
 Returns a sequence of documents parsed from YAML string given.
 
 ## Examples
@@ -199,8 +200,8 @@ Dict{Any, Any}(
 )
 ```
 """
-parse_yaml(yaml::AbstractString) = parse_yaml_str(yaml, "")
-parse_yaml(yaml::AbstractVector{UInt8}) = parse_yaml_str(unsafe_string(pointer(yaml)), "")
+parse_yaml(yaml::AbstractString) = parse_yaml_str(codeunits(yaml), "")
+parse_yaml(yaml::AbstractVector{UInt8}) = parse_yaml_str(yaml, "")
 
 """
     open_yaml(path::AbstractString)
@@ -211,9 +212,18 @@ function open_yaml(path::AbstractString)
     abs_path = abspath(path)
     file_dir = dirname(abs_path)
     isfile(abs_path) || throw(YAMLError("File not found: $abs_path"))
-    yaml_str = read(abs_path, String)
+    yaml = read(abs_path)
 
-    return parse_yaml_str(yaml_str, file_dir)
+    return parse_yaml_str(yaml, file_dir)
+end
+
+"""
+    open_yaml(io::IO)
+
+Reads a YAML file from a given `io` and parse it.
+"""
+function open_yaml(io::IO)
+    return parse_yaml_str(read(io), "")
 end
 
 end # module YAML

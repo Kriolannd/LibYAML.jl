@@ -38,7 +38,7 @@ const RESOLVERS = Dict{String, Regex}(
                             )?$"x,
 )
 
-function resolve(value, tag)
+function resolve_tag(value, tag)
     tag in EXPLICIT_TYPES_TAGS && return tag
     
     for (tag, reg) in RESOLVERS
