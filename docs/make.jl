@@ -15,7 +15,7 @@ makedocs(;
     ),
     pages = [
         "Home"    => "index.md",
-        "Content" => "pages/content.md",
+        "Content" => "pages/api_reference.md",
         # Add your pages here ...
     ],
     warnonly = [:doctest, :missing_docs],

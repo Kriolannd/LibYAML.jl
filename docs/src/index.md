@@ -1,69 +1,48 @@
-# *It's just a template, but documentation will be here soon.*
----
+# LibYAML.jl 
 
-# Quickstart
+Julia wrapper package for parsing `yaml` files
 
-A standard julia [guide](https://docs.julialang.org/en/v1/manual/documentation/) that demonstrates the main cases of working with documenting a package. Here is the basic syntax for working with docstrings, style guide and tips.
-A more detailed guide to working with the documenter is shown [here](https://documenter.juliadocs.org/stable/showcase/).
+## Installation
 
-Below is a simple example of using docstring:
-
-````julia
-\"\"\"
-    bar(x[, y])
-
-Compute the Bar index between `x` and `y`.
-
-If `y` is unspecified, compute the Bar index between all pairs of columns of `x`.
-
-# Examples
-
-```julia-repl
-julia> bar([1, 2], [1, 2])
-1
-```
-\"\"\"
-function bar(x, y) ...
-````
-
-## Local documentation build
-
-If you want to build the documentation locally, you need to run the command `julia --project docs/make.jl` in the root of the package directory.
-
-## Documenantion file structure
-
-Let's go through the main documentation files and folders.
-
-### docs/make.jl
-
-This file contains the [makedocs](https://documenter.juliadocs.org/stable/lib/public/#Documenter.makedocs) method, which builds the documentation. Let's look at a few important keywords you might need:
-
-- `pages` can be use to specify a hierarchical page structure, and the order in which the pages appear in the navigation of the rendered output. If omitted, Documenter will automatically generate a flat list of pages based on the files present in the source directory.
+To install LibYAML, simply use the Julia package manager:
 
 ```julia
-pages = [
-    "Overview" => "index.md",
-    "tutorial.md",
-    "Tutorial" => [
-        "tutorial/introduction.md",
-        "Advanced" => "tutorial/features.md",
-    ],
-    "apireference.md",
-]
+] add LibYAML
 ```
 
-- `assets`: For the `logo`, Documenter checks for the existence of `assets/logo.{svg,png,webp,gif,jpg,jpeg}`, in this order. The first one it finds gets displayed at the top of the navigation sidebar. It will also check for `assets/logo-dark.{svg,png,webp,gif,jpg,jpeg}` and use that for dark themes. For the `favicon`, Documenter checks for the existence of `assets/favicon.ico`.
+## Usage
+```
+using LibYAML
 
-- `sidebar_sitename` determines whether the site name is shown in the sidebar or not. Setting it to `false` can be useful when the logo already contains the name of the package. Defaults to `true`.
+yaml_str = """
+retCode: 0
+retMsg: "OK"
+result:
+  ap: 0.6636
+  bp: 0.6634
+  h: 0.6687
+  l: 0.6315
+  lp: 0.6633
+  o: 0.6337
+  qv: 1.1594252877069e7
+  s: "ADAUSDT"
+  t: "2024-03-25T19:05:35.491000064"
+  v: 1.780835204e7
+retExtInfo: {}
+time: "2024-03-25T19:05:38.912999936"
+"""
 
-### docs/src/index.md
+julia> parse_yaml(yaml_str)
+1-element Vector{Dict{Any, Any}}:
+ Dict(
+  "retExtInfo" => Dict{Any, Any}(),
+  "time" => "2024-03-25T19:05:38.912999936",
+  "retCode" => "0",
+  "retMsg" => "OK",
+  "result" => Dict{Any, Any}("v" => "1.780835204e7", "ap" => "0.6636", "o" => "0.6337", "t" => "2024-03-25T19:05:35.491000064", "qv" => "1.1594252877069e7", "bp" => "0.6634", "l" => "0.6315", "lp" => "0.6633", "h" => "0.6687", "s" => "ADAUSDT"…))
+```
 
-If you use Documenter's default HTML output the name index.md is mandatory. This file will be the main page of the rendered HTML documentation.
+## Useful Links
 
-### docs/src/pages/
-
-All your markdown documentation files will be located here.
-
-### docs/src/assets/
-
-This is where all the resources you need for documentation are located, inlcuding `logo` and `favicon`. See also [add logo](https://documenter.juliadocs.org/stable/man/guide/#Adding-a-logo-or-icon).
+- [libyaml](https://github.com/yaml/libyaml) – Official library repository.  
+- [LibYAML_jll.jl](https://github.com/JuliaBinaryWrappers/LibYAML_jll.jl) – Julia wrapper for libyaml.
