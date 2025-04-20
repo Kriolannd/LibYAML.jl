@@ -48,6 +48,11 @@ julia> parse_yaml(yaml_str)
   "result" => Dict{Any, Any}("v" => "1.780835204e7", "ap" => "0.6636", "o" => "0.6337", "t" => "2024-03-25T19:05:35.491000064", "qv" => "1.1594252877069e7", "bp" => "0.6634", "l" => "0.6315", "lp" => "0.6633", "h" => "0.6687", "s" => "ADAUSDT"…))
 ```
 
+## Useful Links
+
+- [libyaml](https://github.com/yaml/libyaml) – Official library repository.  
+- [LibYAML_jll.jl](https://github.com/JuliaBinaryWrappers/LibYAML_jll.jl) – Julia wrapper for libyaml.
+
 ## Contributing
 
 Contributions to LibYAML are welcome! If you encounter a bug, have a feature request, or would like to contribute code, please open an issue or a pull request on GitHub.
