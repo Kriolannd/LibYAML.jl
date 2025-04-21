@@ -17,7 +17,7 @@ To install LibYAML, simply use the Julia package manager:
 ```
 
 ## Usage
-```
+```julia
 using LibYAML
 
 yaml_str = """
