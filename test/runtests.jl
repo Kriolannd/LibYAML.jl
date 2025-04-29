@@ -12,26 +12,38 @@ end
 
 @testset "[2] Types: Int, Float, Bool, Null, Timestamp" begin
     yaml = """
-    int: 42
-    float: 3.14
+    int: 423_456
+    float: 333_456.14
+    nan: .nan
+    inf: .Inf
+    minus_inf: -.INF
     bool1: true
     bool2: OFF
     null1: null
     null2: ~
     null3:
-    date: 2020-12-30
-    datetime: 2020-12-30T12:34:56.123Z
+    datetime1: 2020-12-30
+    datetime2: 2020-12-30T12:34:56
+    datetime3: 2020-12-30T12:34:56.1
+    datetime4: 2020-12-30T12:34:56.12
+    datetime5: 2020-12-30T12:34:56.123
     """
     parsed = parse_yaml(yaml)
-    @test parsed["int"] == 42
-    @test parsed["float"] ≈ 3.14
+    @test parsed["int"] == 423456
+    @test parsed["float"] ≈ 333_456.14
+    @test isnan(parsed["nan"])
+    @test isinf(parsed["inf"])
+    @test parsed["minus_inf"] == -Inf
     @test parsed["bool1"] == true
     @test parsed["bool2"] == false
     @test isnothing(parsed["null1"])
     @test isnothing(parsed["null2"])
     @test isnothing(parsed["null3"])
-    @test parsed["date"] == Date("2020-12-30")
-    @test parsed["datetime"] == DateTime("2020-12-30T12:34:56.123")
+    @test parsed["datetime1"] == DateTime("2020-12-30")
+    @test parsed["datetime2"] == DateTime("2020-12-30T12:34:56")
+    @test parsed["datetime3"] == DateTime("2020-12-30T12:34:56.1")
+    @test parsed["datetime4"] == DateTime("2020-12-30T12:34:56.12")
+    @test parsed["datetime5"] == DateTime("2020-12-30T12:34:56.123")
 end
 
 @testset "[3] Lists and Dicts" begin

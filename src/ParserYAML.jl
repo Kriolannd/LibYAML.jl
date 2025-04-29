@@ -129,18 +129,7 @@ end
     end
 end
 
-@inline function parse_scalar(node::YAMLNode, ctx::FileContext, resolver::EmptyResolver)
-    value = unsafe_string(node.data.scalar.value)
-    tag == "!include" && return parse_yaml_file(resolver, joinpath(ctx.dir, value))
-
-    return value
-end
-
-@inline function parse_scalar(node::YAMLNode, ctx::StringContext, resolver::EmptyResolver)
-    return unsafe_string(node.data.scalar.value)
-end
-
-@inline function parse_scalar(node::YAMLNode, ctx::FileContext, resolver::Resolver)
+@inline function parse_scalar(node::YAMLNode, ctx::FileContext, resolver::AbstractResolver)
     tag = unsafe_string(node.tag)
     value = unsafe_string(node.data.scalar.value)
     tag == "!include" && return parse_yaml_file(resolver, joinpath(ctx.dir, value))
@@ -148,7 +137,7 @@ end
     return parse_value(resolver(value, tag), value)
 end
 
-@inline function parse_scalar(node::YAMLNode, ctx::StringContext, resolver::Resolver)
+@inline function parse_scalar(node::YAMLNode, ctx::StringContext, resolver::AbstractResolver)
     tag = unsafe_string(node.tag)
     value = unsafe_string(node.data.scalar.value)
 

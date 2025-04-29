@@ -1,20 +1,25 @@
+const TIMESTAMP_FORMATS = [
+    dateformat"yyyy-mm-dd",
+    dateformat"yyyy-mm-ddTHH:MM:SS",
+    dateformat"yyyy-mm-ddTHH:MM:SS.s",
+    dateformat"yyyy-mm-ddTHH:MM:SS.ss",
+    dateformat"yyyy-mm-ddTHH:MM:SS.sss",
+]
+
 @inline function parse_int(value)
-    value = lowercase(replace(value, "_" => ""))
+    value = replace(value, "_" => "")
     parse(Int, value)
 end
 
 @inline function parse_float(value)
-    value = lowercase(replace(value, "_" => ""))
+    value = replace(value, "_" => "")
 
-    value == ".nan" && return NaN
-
-    m = match(r"^([+\-]?)\.inf$", value)
-    if m !== nothing
-        if m.captures[1] == "-"
-            return -Inf
-        else
-            return Inf
-        end
+    if value == ".nan" || value == ".NaN" || value == ".NAN"
+        return NaN
+    elseif value == ".inf" || value == ".Inf" || value == ".INF"
+        return Inf
+    elseif value == "-.inf" || value == "-.Inf" || value == "-.INF"
+        return -Inf
     end
 
     return parse(Float64, value)
@@ -25,60 +30,13 @@ end
 @inline parse_null(value) = nothing
 
 @inline function parse_timestamp(value)
-    timestamp_pattern = r"^(\d{4})-    (?# year)
-                             (\d\d?)-    (?# month)
-                             (\d\d?)     (?# day)
-                            (?:
-                             (?:[Tt]|[ \t]+)
-                             (\d\d?):      (?# hour)
-                             (\d\d):       (?# minute)
-                             (\d\d)        (?# second)
-                             (?:\.(\d*))?  (?# fraction)
-                             (?:
-                               [ \t]*(Z|([+\-])(\d\d?)
-                               (?:
-                                    :(\d\d)
-                               )?)
-                             )?
-                            )?$"x
-
-    mat = match(timestamp_pattern, value)
-
-    year = parse(Int, mat.captures[1])
-    month = parse(Int, mat.captures[2])
-    day = parse(Int, mat.captures[3])
-
-    if mat.captures[4] === nothing
-        return Date(year, month, day)
-    end
-
-    hour = parse(Int, mat.captures[4])
-    min = parse(Int, mat.captures[5])
-    sec = parse(Int, mat.captures[6])
-
-    if mat.captures[7] === nothing
-        return DateTime(year, month, day, hour, min, sec)
-    end
-
-    ms = 0
-    if mat.captures[7] !== nothing
-        ms = mat.captures[7]
-        if length(ms) > 3
-            ms = ms[1:3]
+    for fmt in TIMESTAMP_FORMATS
+        try
+            return DateTime(value, fmt)
+        catch
+            continue
         end
-        ms = parse(Int, string(ms, repeat("0", 3 - length(ms))))
     end
 
-    delta_hr = 0
-    delta_mn = 0
-
-    if mat.captures[9] !== nothing
-        delta_hr = parse(Int, mat.captures[9])
-    end
-
-    if mat.captures[10] !== nothing
-        delta_mn = parse(Int, mat.captures[10])
-    end
-
-    return DateTime(year, month, day, hour, min, sec, ms)
+    throw(YAMLError("Unrecognized timestamp format: $value"))
 end

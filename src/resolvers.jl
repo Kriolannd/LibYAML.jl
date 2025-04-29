@@ -13,11 +13,22 @@ const DEFAULT_RESOLVERS = Dict{String, Regex}(
     YAML_BOOL_TAG => r"^(?:y|Y|yes|Yes|YES|n|N|no|No|NO
                         |true|True|TRUE|false|False|FALSE
                         |on|On|ON|off|Off|OFF)$"x,
-    YAML_INT_TAG => r"^(?:[-+]? [0-9]+)$"x,
-    YAML_FLOAT_TAG => r"^(?:[-+]? ( \. [0-9]+ 
-                        | [0-9]+ ( \. [0-9]* )? ) ( [eE] [-+]? [0-9]+ )?
-                        |[-+]? (?: \.inf | \.Inf | \.INF )
-                        |\.nan | \.NaN | \.NAN)$"x,
+    YAML_INT_TAG => r"^(?:[-+]?(?:[0-9]+(?:_[0-9]+)*))$"x,
+    YAML_FLOAT_TAG => r"""^
+                        (?: [-]?
+                        (
+                            \. [0-9]+(?:_[0-9]+)*
+                            |
+                            [0-9]+(?:_[0-9]+)*
+                            (?: \. [0-9]*(?:_[0-9]+)* )?
+                        )
+                        (?: [eE] [-+]? [0-9]+(?:_[0-9]+)* )? 
+                        |
+                        [-+]? (?: \.inf | \.Inf | \.INF )
+                        |
+                        \.nan | \.NaN | \.NAN
+                        )$
+                        """x,
     YAML_NULL_TAG => r"^(?:~|null|Null|NULL|)$"x,
     YAML_TIMESTAMP_TAG => r"^(\d{4})-    (?# year)
                              (\d\d?)-    (?# month)
@@ -47,8 +58,7 @@ struct Resolver <: AbstractResolver
     Resolver(resolvers) = new(resolvers)
 end
 
-(r::EmptyResolver)(value, tag) = value
-
+(r::EmptyResolver)(value, tag) = YAML_DEFAULT_SCALAR_TAG
 
 function (r::Resolver)(value, tag)
     tag in EXPLICIT_TYPES_TAGS && return tag
