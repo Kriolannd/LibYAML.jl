@@ -1,5 +1,4 @@
 const EXPLICIT_TYPES_TAGS = [
-    "!include",
     YAML_BOOL_TAG,
     YAML_INT_TAG,
     YAML_FLOAT_TAG,
@@ -10,7 +9,7 @@ const EXPLICIT_TYPES_TAGS = [
 const YAML_DEFAULT_SCALAR_TAG = YAML_STR_TAG
 const BOOL_TRUE_PATTERN = r"^(?:y|Y|yes|Yes|YES|true|True|TRUE|on|On|ON)$"x
 
-const RESOLVERS = Dict{String, Regex}(
+const DEFAULT_RESOLVERS = Dict{String, Regex}(
     YAML_BOOL_TAG => r"^(?:y|Y|yes|Yes|YES|n|N|no|No|NO
                         |true|True|TRUE|false|False|FALSE
                         |on|On|ON|off|Off|OFF)$"x,
@@ -38,12 +37,26 @@ const RESOLVERS = Dict{String, Regex}(
                             )?$"x,
 )
 
-function resolve_tag(value, tag)
+abstract type AbstractResolver end
+
+struct EmptyResolver <: AbstractResolver end
+
+struct Resolver <: AbstractResolver
+    resolvers::Dict{String, Regex}
+    Resolver() = new(DEFAULT_RESOLVERS)
+    Resolver(resolvers) = new(resolvers)
+end
+
+(r::EmptyResolver)(value, tag) = value
+
+
+function (r::Resolver)(value, tag)
     tag in EXPLICIT_TYPES_TAGS && return tag
     
-    for (tag, reg) in RESOLVERS
+    for (tag, reg) in r.resolvers
         occursin(reg, value) && return tag
     end
 
     return YAML_DEFAULT_SCALAR_TAG
 end
+

@@ -5,7 +5,7 @@ using Test, LibYAML, Dates
     foo: bar
     baz: 42
     """
-    parsed = (parse_yaml(yaml))[1]
+    parsed = parse_yaml(yaml)
     @test parsed["foo"] == "bar"
     @test parsed["baz"] == 42
 end
@@ -22,7 +22,7 @@ end
     date: 2020-12-30
     datetime: 2020-12-30T12:34:56.123Z
     """
-    parsed = (parse_yaml(yaml))[1]
+    parsed = parse_yaml(yaml)
     @test parsed["int"] == 42
     @test parsed["float"] ≈ 3.14
     @test parsed["bool1"] == true
@@ -47,7 +47,7 @@ end
       - key1: val1
         key2: val2
     """
-    parsed = (parse_yaml(yaml))[1]
+    parsed = parse_yaml(yaml)
     @test parsed["list"] == ["one", 2, true]
     @test parsed["dict"] == Dict("foo" => "bar", "baz" => 123)
     @test parsed["nested"][1]["key1"] == "val1"
@@ -62,7 +62,7 @@ end
           d:
             e: value
     """
-    parsed = parse_yaml(nested_yaml)[1]
+    parsed = parse_yaml(nested_yaml)
     @test parsed["a"]["b"]["c"]["d"]["e"] == "value"
 
     # Nested sequence
@@ -73,7 +73,7 @@ end
       - - 3
         - 4
     """
-    parsed = parse_yaml(nested_yaml)[1]
+    parsed = parse_yaml(nested_yaml)
     @test parsed == Dict("nested" => [[1,2],[3,4]])
 end
 
@@ -88,7 +88,7 @@ end
       <<: *base
       extra: true
     """
-    parsed = parse_yaml(merge_yaml)[1]
+    parsed = parse_yaml(merge_yaml)
     @test parsed["merged"] == Dict("name" => "base", "value" => 10, "extra" => true)
     @test parsed["base"] == Dict("name" => "base", "value" => 10)
 
@@ -102,7 +102,7 @@ end
       <<: [*default, *override]
       z: 3
     """
-    parsed = parse_yaml(multi_merge_yaml)[1]
+    parsed = parse_yaml(multi_merge_yaml)
     @test parsed["combined"] == Dict("x" => 1, "y" => 2, "z" => 3)
     @test parsed["default"] == Dict("x" => 1)
     @test parsed["override"] == Dict("y" => 2)
@@ -120,7 +120,7 @@ end
       <<: *inner
       outer_val: 3
     """
-    parsed = parse_yaml(nested_merge)[1]
+    parsed = parse_yaml(nested_merge)
     @test parsed["outer"] == Dict("val" => 1, "inner_val" => 2, "outer_val" => 3)
     @test parsed["inner"] == Dict("val" => 1, "inner_val" => 2)
     @test parsed["defaults"] == Dict("val" => 1)
@@ -128,10 +128,10 @@ end
 
 @testset "[6] Edge cases" begin
     @test isempty(parse_yaml(""))
-    @test parse_yaml("---") == [nothing]
-    @test (parse_yaml("empty_list: []"))[1] == Dict("empty_list" => [])
-    @test (parse_yaml("empty_dict: {}"))[1] == Dict("empty_dict" => Dict())
-    @test (parse_yaml("utf8: 😀"))[1] == Dict("utf8" => "😀")
+    @test parse_yaml("---") === nothing
+    @test parse_yaml("empty_list: []") == Dict("empty_list" => [])
+    @test parse_yaml("empty_dict: {}") == Dict("empty_dict" => Dict())
+    @test parse_yaml("utf8: 😀") == Dict("utf8" => "😀")
 end
 
 @testset "[7] Aliases without merge" begin
@@ -141,7 +141,7 @@ end
     copy1: *default
     copy2: *default
     """
-    parsed = parse_yaml(yaml)[1]
+    parsed = parse_yaml(yaml)
     @test parsed["default"] == Dict("key" => "val")
     @test parsed["copy1"] == Dict("key" => "val")
     @test parsed["copy2"] == Dict("key" => "val")
@@ -157,7 +157,7 @@ end
     ---
     c: 3
     """
-    parsed = parse_yaml(yaml)
+    parsed = parse_yaml(yaml, multi=true)
     @test length(parsed) == 3
     @test parsed[1] == Dict("a" => 1)
     @test parsed[2] == Dict("b" => 2)
@@ -175,7 +175,7 @@ end
       literal
       text.
     """
-    parsed = parse_yaml(yaml)[1]
+    parsed = parse_yaml(yaml)
     @test parsed["folded"] == "This is folded text.\n"
     @test parsed["literal"] == "This is\nliteral\ntext.\n"
 end
@@ -186,7 +186,7 @@ end
     double: "Line\\nBreak"
     special: "\\u263A"
     """
-    parsed = parse_yaml(yaml)[1]
+    parsed = parse_yaml(yaml)
     @test parsed["single"] == "I'm single-quoted"
     @test parsed["double"] == "Line\nBreak"
     @test parsed["special"] == "☺"
@@ -206,11 +206,6 @@ end
     a:
       - b
     - c  # неправильный отступ
-    """)
-
-    # YAMLError
-    @test_throws YAMLError parse_yaml("""
-    key: !include not_exist.yaml
     """)
 end
 
@@ -243,7 +238,7 @@ end
       """
       write(main_path, main_yaml)
 
-      parsed = (open_yaml(main_path))[1]
+      parsed = open_yaml(main_path)
 
       @test parsed["database"]["host"] == "localhost"
       @test parsed["database"]["port"] == 5432

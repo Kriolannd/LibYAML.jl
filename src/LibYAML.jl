@@ -80,7 +80,8 @@ export parse_yaml,
     YAMLMemoryError,
     YAMLReaderError,
     YAMLScannerError,
-    YAMLParserError
+    YAMLParserError,
+    Resolver
 
 const YAML_NULL_TAG = "tag:yaml.org,2002:null"
 const YAML_BOOL_TAG = "tag:yaml.org,2002:bool"
