@@ -14,6 +14,7 @@ export parse_yaml,
     YAMLReaderError,
     YAMLScannerError,
     YAMLParserError,
+    EmptyResolver,
     Resolver
 
 const POSSIBLE_RETURN_TYPES = Union{Dict{String, Any}, Vector{Any}, Nothing}
@@ -214,8 +215,8 @@ end
 #__ YAML interface __#
 
 """
-    parse_yaml(yaml_str::String)
-    parse_yaml(yaml_str::Vector{UInt8})
+    parse_yaml(yaml_str::String; multi::Bool, resolver::AbstractResolver)
+    parse_yaml(yaml_str::Vector{UInt8}; multi::Bool, resolver::AbstractResolver)
 
 Parse a YAML string or file (or vector of `UInt8`) into a dictionary, vector or nothing. 
 - If a given YAML document contains a dictionary, the parser returns a dictionary.
@@ -224,6 +225,10 @@ Parse a YAML string or file (or vector of `UInt8`) into a dictionary, vector or 
 or empty dictionary.
 
 Returns a sequence of documents parsed from YAML string given.
+
+## Keyword arguments
+- `multi::Bool = false`: If YAML is multidocumental, allows the reader to choose between obtaining all documents at once or only the first one.
+- `resolver::AbstractResolver = Resolver()`: Allows the reader to choose between parsing values or obtaining them as raw strings. Default is `Resolver()` which turns the parsers on. Choose `EmptyResolver()` if not desired.
 
 ## Examples
 ```julia
@@ -245,10 +250,10 @@ julia> parse_yaml(yaml_str)
 Dict{String, Any}(
     "dict" => Dict{Any, Any}(
         "b" => Any["w", "d"], 
-        "a" => "1"
+        "a" => 1
     ), 
     "name" => "Alice", 
-    "array" => Any["1", "2", Dict{Any, Any}("b" => "null", "a" => "3")]
+    "array" => Any[1, 2, Dict{Any, Any}("b" => nothing, "a" => 3)]
 )
 ```
 """
@@ -274,9 +279,13 @@ function parse_yaml(
 end
 
 """
-    open_yaml(path::AbstractString)
+    open_yaml(path::AbstractString; multi::Bool, resolver::AbstractResolver)
 
 Read a YAML file from a given `path` and parse it.
+
+## Keyword arguments
+- `multi::Bool = false`: If YAML is multidocumental, allows the reader to choose between obtaining all documents at once or only the first one.
+- `resolver::AbstractResolver = Resolver()`: Allows the reader to choose between parsing values or obtaining them as raw strings. Default is `Resolver()` which turns the parsers on. Choose `EmptyResolver()` if not desired.
 """
 open_yaml(
     path::AbstractString; 
@@ -285,9 +294,13 @@ open_yaml(
 ) = parse_yaml_file(resolver, path, multi=multi)
 
 """
-    open_yaml(io::IO)
+    open_yaml(io::IO; multi::Bool, resolver::AbstractResolver)
 
 Reads a YAML file from a given `io` and parse it.
+
+## Keyword arguments
+- `multi::Bool = false`: If YAML is multidocumental, allows the reader to choose between obtaining all documents at once or only the first one.
+- `resolver::AbstractResolver = Resolver()`: Allows the reader to choose between parsing values or obtaining them as raw strings. Default is `Resolver()` which turns the parsers on. Choose `EmptyResolver()` if not desired.
 """
 open_yaml(io::IO; multi::Bool=false, resolver=Resolver()) = 
     parse_yaml_str(resolver::AbstractResolver, StringContext(), read(io), multi=multi)

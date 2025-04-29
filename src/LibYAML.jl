@@ -81,6 +81,7 @@ export parse_yaml,
     YAMLReaderError,
     YAMLScannerError,
     YAMLParserError,
+    EmptyResolver,
     Resolver
 
 const YAML_NULL_TAG = "tag:yaml.org,2002:null"
