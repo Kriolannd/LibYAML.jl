@@ -137,8 +137,7 @@ end
 end
 
 @inline function parse_scalar(node::YAMLNode, ctx::StringContext, resolver::EmptyResolver)
-    value = unsafe_string(node.data.scalar.value)
-    return parse_value(resolver(value, tag), value)
+    return unsafe_string(node.data.scalar.value)
 end
 
 @inline function parse_scalar(node::YAMLNode, ctx::FileContext, resolver::Resolver)
