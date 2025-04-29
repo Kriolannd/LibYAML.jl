@@ -58,7 +58,6 @@ function parse_yaml_str(yaml_str::AbstractVector{UInt8}, file_dir)
     finally
         yaml_parser_delete(parser)
     end
-    return docs
 end
 
 @inline function parse_node(doc::Ref{YAMLDocument}, node_ptr::Ptr{YAMLNode}, file_dir)

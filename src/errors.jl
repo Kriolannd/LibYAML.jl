@@ -1,81 +1,87 @@
 abstract type AbstractYAMLError <: Exception end
 
+struct Mark
+    line::Int64
+    column::Int64
+end
+
 struct YAMLError <: AbstractYAMLError
     msg::String
 end
 
 struct YAMLMemoryError <: AbstractYAMLError
     ctx::String
-    ctx_mark::Vector{Int64}
+    ctx_mark::Mark
     problem::String
-    prob_mark::Vector{Int64}
+    prob_mark::Mark
 end
 
 struct YAMLReaderError <: AbstractYAMLError
     ctx::String
-    ctx_mark::Vector{Int64}
+    ctx_mark::Mark
     problem::String
-    prob_mark::Vector{Int64}
+    prob_mark::Mark
 end
 
 struct YAMLScannerError <: AbstractYAMLError
     ctx::String
-    ctx_mark::Vector{Int64}
+    ctx_mark::Mark
     problem::String
-    prob_mark::Vector{Int64}
+    prob_mark::Mark
 end
 
 struct YAMLParserError <: AbstractYAMLError
     ctx::String
-    ctx_mark::Vector{Int64}
+    ctx_mark::Mark
     problem::String
-    prob_mark::Vector{Int64}
+    prob_mark::Mark
 end
 
-function Base.showerror(io::IO, err::AbstractYAMLError)
-    if isempty(err.ctx)
-        print(io, "[ERROR]: $(err.problem) around (line = $(err.prob_mark[1]), \
-                    column = $(err.prob_mark[2]))")
-    else
-        print(io, "[CONTEXT]: $(err.ctx) around (line = $(err.ctx_mark[1]), \
-                    column = $(err.ctx_mark[2])) | [ERROR]: $(err.problem) around (line = \
-                    $(err.prob_mark[1]), column = $(err.prob_mark[2]))")
-    end
-end
+const ERROR_TYPES_MAP = Dict(
+    YAML_MEMORY_ERROR => YAMLMemoryError,
+    YAML_READER_ERROR => YAMLReaderError,
+    YAML_SCANNER_ERROR => YAMLScannerError,
+    YAML_PARSER_ERROR => YAMLParserError,
+)
 
 function Base.showerror(io::IO, err::YAMLError)
-    print(io, err.msg)
+    print(io, nameof(typeof(err)), ": ", err.msg)
+end
+
+
+function Base.showerror(io::IO, err::AbstractYAMLError)
+    print(io, nameof(typeof(err)), ": ")
+    if hasproperty(err, :ctx) && !isempty(err.ctx)
+        print(io,
+            "in ", err.ctx,
+            " at line ", err.ctx_mark.line,
+            ", column ", err.ctx_mark.column,
+            ": ",
+        )
+    end
+    print(io,
+        err.problem,
+        " at line ", err.prob_mark.line,
+        ", column ", err.prob_mark.column,
+    )
 end
 
 function throw_yaml_err(parser::Ref{YAMLParser})
     err_type = parser[].error
-    context = parser[].context
-    context_mark = parser[].context_mark 
-    problem = parser[].problem
-    problem_mark = parser[].problem_mark
+    ctx_ptr = parser[].context
+    prob_ptr = parser[].problem
 
-    ctx = context == C_NULL ? "" : unsafe_string(context)
-    prob = unsafe_string(problem)
-    if !(context_mark == C_NULL) 
-        ctx_mark_l = Int64(context_mark.line)
-        ctx_mark_c = Int64(context_mark.column)
-        ctx_mark = [ctx_mark_l, ctx_mark_c]
+    ctx_str = ctx_ptr == C_NULL ? "" : unsafe_string(ctx_ptr)
+    prob_str = unsafe_string(prob_ptr)
+    
+    ctx_mark = Mark(Int(parser[].context_mark.line), Int(parser[].context_mark.column))
+    prob_mark = Mark(Int(parser[].problem_mark.line), Int(parser[].problem_mark.column))
+
+    ctor = get(ERROR_TYPES_MAP, err_type, nothing)
+
+    if ctor !== nothing
+        throw(ctor(ctx_str, ctx_mark, prob_str, prob_mark))
     else
-        ctx_mark = Int64[]
-    end
-    prob_mark_l = Int64(problem_mark.line)
-    prob_mark_c = Int64(problem_mark.column)
-    prob_mark = [prob_mark_l, prob_mark_c]
-
-    if err_type == YAML_MEMORY_ERROR
-        throw(YAMLMemoryError(ctx, ctx_mark, prob, prob_mark))
-    elseif err_type == YAML_READER_ERROR
-        throw(YAMLReaderError(ctx, ctx_mark, prob, prob_mark))
-    elseif err_type == YAML_SCANNER_ERROR
-        throw(YAMLScannerError(ctx, ctx_mark, prob, prob_mark))
-    elseif err_type == YAML_PARSER_ERROR
-        throw(YAMLParserError(ctx, ctx_mark, prob, prob_mark))
-    end
-
-    return nothing
+        throw(YAMLError(prob))
+    end 
 end
