@@ -7,26 +7,26 @@ using Test, LibYAML, Dates
     """
     parsed = parse_yaml(yaml)
     @test parsed["foo"] == "bar"
-    @test parsed["baz"] == 42
+    @test parsed["baz"] == "42"
 end
 
 @testset "[2] Types: Int, Float, Bool, Null, Timestamp" begin
     yaml = """
-    int: 423_456
-    float: 333_456.14
-    nan: .nan
-    inf: .Inf
-    minus_inf: -.INF
-    bool1: true
-    bool2: OFF
+    int: !!int 423_456
+    float: !!float 333_456.14
+    nan: !!float .nan
+    inf: !!float .Inf
+    minus_inf: !!float -.INF
+    bool1: !!bool true
+    bool2: !!bool OFF
     null1: null
-    null2: ~
+    null2: !!null ~
     null3:
-    datetime1: 2020-12-30
-    datetime2: 2020-12-30T12:34:56
-    datetime3: 2020-12-30T12:34:56.1
-    datetime4: 2020-12-30T12:34:56.12
-    datetime5: 2020-12-30T12:34:56.123
+    datetime1: !!timestamp 2020-12-30
+    datetime2: !!timestamp 2020-12-30T12:34:56
+    datetime3: !!timestamp 2020-12-30T12:34:56.1
+    datetime4: !!timestamp 2020-12-30T12:34:56.12
+    datetime5: !!timestamp 2020-12-30T12:34:56.123
     """
     parsed = parse_yaml(yaml)
     @test parsed["int"] == 423456
@@ -60,8 +60,8 @@ end
         key2: val2
     """
     parsed = parse_yaml(yaml)
-    @test parsed["list"] == ["one", 2, true]
-    @test parsed["dict"] == Dict("foo" => "bar", "baz" => 123)
+    @test parsed["list"] == ["one", "2", "true"]
+    @test parsed["dict"] == Dict("foo" => "bar", "baz" => "123")
     @test parsed["nested"][1]["key1"] == "val1"
 end
 
@@ -86,7 +86,7 @@ end
         - 4
     """
     parsed = parse_yaml(nested_yaml)
-    @test parsed == Dict("nested" => [[1,2],[3,4]])
+    @test parsed == Dict("nested" => [["1", "2"],["3", "4"]])
 end
 
 @testset "[5] Merge case" begin
@@ -101,8 +101,8 @@ end
       extra: true
     """
     parsed = parse_yaml(merge_yaml)
-    @test parsed["merged"] == Dict("name" => "base", "value" => 10, "extra" => true)
-    @test parsed["base"] == Dict("name" => "base", "value" => 10)
+    @test parsed["merged"] == Dict("name" => "base", "value" => "10", "extra" => "true")
+    @test parsed["base"] == Dict("name" => "base", "value" => "10")
 
     # Merge with multiple dict
     multi_merge_yaml = """
@@ -115,9 +115,9 @@ end
       z: 3
     """
     parsed = parse_yaml(multi_merge_yaml)
-    @test parsed["combined"] == Dict("x" => 1, "y" => 2, "z" => 3)
-    @test parsed["default"] == Dict("x" => 1)
-    @test parsed["override"] == Dict("y" => 2)
+    @test parsed["combined"] == Dict("x" => "1", "y" => "2", "z" => "3")
+    @test parsed["default"] == Dict("x" => "1")
+    @test parsed["override"] == Dict("y" => "2")
 
     # Nested merge
     nested_merge = """
@@ -133,9 +133,9 @@ end
       outer_val: 3
     """
     parsed = parse_yaml(nested_merge)
-    @test parsed["outer"] == Dict("val" => 1, "inner_val" => 2, "outer_val" => 3)
-    @test parsed["inner"] == Dict("val" => 1, "inner_val" => 2)
-    @test parsed["defaults"] == Dict("val" => 1)
+    @test parsed["outer"] == Dict("val" => "1", "inner_val" => "2", "outer_val" => "3")
+    @test parsed["inner"] == Dict("val" => "1", "inner_val" => "2")
+    @test parsed["defaults"] == Dict("val" => "1")
 end
 
 @testset "[6] Edge cases" begin
@@ -171,9 +171,9 @@ end
     """
     parsed = parse_yaml(yaml, multi=true)
     @test length(parsed) == 3
-    @test parsed[1] == Dict("a" => 1)
-    @test parsed[2] == Dict("b" => 2)
-    @test parsed[3] == Dict("c" => 3)
+    @test parsed[1] == Dict("a" => "1")
+    @test parsed[2] == Dict("b" => "2")
+    @test parsed[3] == Dict("c" => "3")
 end
 
 @testset "[9] Multiline strings" begin
@@ -253,13 +253,24 @@ end
       parsed = open_yaml(main_path)
 
       @test parsed["database"]["host"] == "localhost"
-      @test parsed["database"]["port"] == 5432
+      @test parsed["database"]["port"] == "5432"
       @test parsed["database"]["username"] == "admin"
       @test parsed["database"]["password"] == "secret"
 
       @test parsed["services"][1]["name"] == "auth"
-      @test parsed["services"][1]["port"] == 8080
+      @test parsed["services"][1]["port"] == "8080"
       @test parsed["services"][2]["name"] == "billing"
-      @test parsed["services"][2]["port"] == 8081
+      @test parsed["services"][2]["port"] == "8081"
+  end
+
+  @testset "[14] Value parse errors" begin
+    err_str = "Invalid null specification: 3"
+    @test_throws YAMLError(err_str) parse_yaml("a: !!null 3")
+
+    err_str = "Invalid boolean literal: go"
+    @test_throws YAMLError(err_str) parse_yaml("a: !!bool go")
+
+    err_str = "Unrecognized timestamp format: 2024-03-01T566-4-45"
+    @test_throws YAMLError(err_str) parse_yaml("ts: !!timestamp 2024-03-01T566-4-45")
   end
 end

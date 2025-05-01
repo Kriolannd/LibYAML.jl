@@ -1,41 +1,61 @@
-const TIMESTAMP_FORMATS = [
+const TIMESTAMP_FORMATS = DateFormat[
     dateformat"yyyy-mm-dd",
     dateformat"yyyy-mm-ddTHH:MM:SS",
-    dateformat"yyyy-mm-ddTHH:MM:SS.s",
-    dateformat"yyyy-mm-ddTHH:MM:SS.ss",
     dateformat"yyyy-mm-ddTHH:MM:SS.sss",
 ]
 
+const NAN_KEY_WORDS = [".nan", ".NaN", ".NAN"]
+const POSITIVE_INF_KEY_WORDS = [".inf", ".Inf", ".INF", "+.inf", "+.Inf", "+.INF"]
+const NEGATIVE_INF_KEY_WORDS = ["-.inf", "-.Inf", "-.INF"]
+
+const BOOL_TRUE_KEY_WORDS = 
+    ["true", "True", "TRUE", "yes", "Yes", "YES", "on", "On", "ON", "y", "Y"]
+const BOOL_FALSE_KEY_WORDS =
+    ["false", "False", "FALSE", "no", "No", "NO", "off", "Off", "OFF", "n", "N"]
+
+const NULL_KEY_WORDS = ["", "~", "null", "Null", "NULL"]
+
 @inline function parse_int(value)
     value = replace(value, "_" => "")
-    parse(Int, value)
+    return parse(Int, value)
 end
 
 @inline function parse_float(value)
     value = replace(value, "_" => "")
 
-    if value == ".nan" || value == ".NaN" || value == ".NAN"
+    if value in NAN_KEY_WORDS
         return NaN
-    elseif value == ".inf" || value == ".Inf" || value == ".INF"
+    elseif value in POSITIVE_INF_KEY_WORDS
         return Inf
-    elseif value == "-.inf" || value == "-.Inf" || value == "-.INF"
+    elseif value in NEGATIVE_INF_KEY_WORDS
         return -Inf
     end
 
     return parse(Float64, value)
 end
 
-@inline parse_bool(value) = occursin(BOOL_TRUE_PATTERN, value)
+@inline function parse_bool(value)
+    if value in BOOL_TRUE_KEY_WORDS
+        return true
+    elseif value in BOOL_FALSE_KEY_WORDS
+        return false
+    end
 
-@inline parse_null(value) = nothing
+    throw(YAMLError("Invalid boolean literal: $value"))
+end
+
+@inline function parse_null(value)
+    if value in NULL_KEY_WORDS
+        return nothing
+    end
+
+    throw(YAMLError("Invalid null specification: $value"))
+end
 
 @inline function parse_timestamp(value)
     for fmt in TIMESTAMP_FORMATS
-        try
-            return DateTime(value, fmt)
-        catch
-            continue
-        end
+        dt = tryparse(DateTime, value, fmt)
+        !isnothing(dt) && return dt
     end
 
     throw(YAMLError("Unrecognized timestamp format: $value"))

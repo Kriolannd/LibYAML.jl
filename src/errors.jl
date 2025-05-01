@@ -37,51 +37,56 @@ struct YAMLParserError <: AbstractYAMLError
     prob_mark::Mark
 end
 
-const ERROR_TYPES_MAP = Dict(
-    YAML_MEMORY_ERROR => YAMLMemoryError,
-    YAML_READER_ERROR => YAMLReaderError,
-    YAML_SCANNER_ERROR => YAMLScannerError,
-    YAML_PARSER_ERROR => YAMLParserError,
-)
-
 function Base.showerror(io::IO, err::YAMLError)
-    print(io, nameof(typeof(err)), ": ", err.msg)
+    return print(io, nameof(typeof(err)), ": ", err.msg)
 end
-
 
 function Base.showerror(io::IO, err::AbstractYAMLError)
     print(io, nameof(typeof(err)), ": ")
     if hasproperty(err, :ctx) && !isempty(err.ctx)
-        print(io,
-            "in ", err.ctx,
-            " at line ", err.ctx_mark.line,
-            ", column ", err.ctx_mark.column,
+        print(
+            io,
+            "in ",
+            err.ctx,
+            " at line ",
+            err.ctx_mark.line,
+            ", column ",
+            err.ctx_mark.column,
             ": ",
         )
     end
-    print(io,
+    return print(
+        io,
         err.problem,
-        " at line ", err.prob_mark.line,
-        ", column ", err.prob_mark.column,
+        " at line ",
+        err.prob_mark.line,
+        ", column ",
+        err.prob_mark.column,
     )
 end
 
-function throw_yaml_err(parser::Ref{YAMLParser})
-    err_type = parser[].error
-    ctx_ptr = parser[].context
-    prob_ptr = parser[].problem
+function throw_yaml_err(parser::YAMLParser)
+    err_type = parser.error
+    ctx_ptr = parser.context
+    prob_ptr = parser.problem
 
     ctx_str = ctx_ptr == C_NULL ? "" : unsafe_string(ctx_ptr)
     prob_str = unsafe_string(prob_ptr)
-    
-    ctx_mark = Mark(Int(parser[].context_mark.line), Int(parser[].context_mark.column))
-    prob_mark = Mark(Int(parser[].problem_mark.line), Int(parser[].problem_mark.column))
 
-    ctor = get(ERROR_TYPES_MAP, err_type, nothing)
+    ctx_mark =
+        Mark(Int(parser.context_mark.line), Int(parser.context_mark.column))
+    prob_mark =
+        Mark(Int(parser.problem_mark.line), Int(parser.problem_mark.column))
 
-    if ctor !== nothing
-        throw(ctor(ctx_str, ctx_mark, prob_str, prob_mark))
-    else
-        throw(YAMLError(prob))
-    end 
+    if err_type == YAML_MEMORY_ERROR
+        throw(YAMLMemoryError(ctx_str, ctx_mark, prob_str, prob_mark))
+    elseif err_type == YAML_READER_ERROR
+        throw(YAMLReaderError(ctx_str, ctx_mark, prob_str, prob_mark))
+    elseif err_type == YAML_SCANNER_ERROR
+        throw(YAMLScannerError(ctx_str, ctx_mark, prob_str, prob_mark))
+    elseif err_type == YAML_PARSER_ERROR
+        throw(YAMLParserError(ctx_str, ctx_mark, prob_str, prob_mark))
+    end
+
+    throw(YAMLError(prob))
 end

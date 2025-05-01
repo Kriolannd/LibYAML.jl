@@ -9,13 +9,11 @@ export YAML_NULL_TAG,
     YAML_TIMESTAMP_TAG,
     YAML_STR_TAG,
     YAML_SEQ_TAG,
-    YAML_MAP_TAG
+    YAML_MAP_TAG,
+    YAML_DEFAULT_SCALAR_TAG
 
 export YAMLEncoding,
-    YAML_ANY_ENCODING,
-    YAML_UTF8_ENCODING,
-    YAML_UTF16LE_ENCODING,
-    YAML_UTF16BE_ENCODING
+    YAML_ANY_ENCODING, YAML_UTF8_ENCODING, YAML_UTF16LE_ENCODING, YAML_UTF16BE_ENCODING
 
 export YAMLErrorType,
     YAML_NO_ERROR,
@@ -36,20 +34,12 @@ export YAMLScalarStyle,
     YAML_FOLDED_SCALAR_STYLE
 
 export YAMLSequenceStyle,
-    YAML_ANY_SEQUENCE_STYLE,
-    YAML_BLOCK_SEQUENCE_STYLE,
-    YAML_FLOW_SEQUENCE_STYLE
+    YAML_ANY_SEQUENCE_STYLE, YAML_BLOCK_SEQUENCE_STYLE, YAML_FLOW_SEQUENCE_STYLE
 
 export YAMLMappingStyle,
-    YAML_ANY_MAPPING_STYLE,
-    YAML_BLOCK_MAPPING_STYLE,
-    YAML_FLOW_MAPPING_STYLE
+    YAML_ANY_MAPPING_STYLE, YAML_BLOCK_MAPPING_STYLE, YAML_FLOW_MAPPING_STYLE
 
-export YAMLNodeType,
-    YAML_NO_NODE,
-    YAML_SCALAR_NODE,
-    YAML_SEQUENCE_NODE,
-    YAML_MAPPING_NODE
+export YAMLNodeType, YAML_NO_NODE, YAML_SCALAR_NODE, YAML_SEQUENCE_NODE, YAML_MAPPING_NODE
 
 export YAMLMark,
     YAMLNodeData,
@@ -74,7 +64,7 @@ export yaml_document_delete,
     yaml_parser_set_encoding,
     yaml_parser_load
 
-export parse_yaml, 
+export parse_yaml,
     open_yaml,
     YAMLError,
     YAMLMemoryError,
@@ -92,6 +82,7 @@ const YAML_FLOAT_TAG = "tag:yaml.org,2002:float"
 const YAML_TIMESTAMP_TAG = "tag:yaml.org,2002:timestamp"
 const YAML_SEQ_TAG = "tag:yaml.org,2002:seq"
 const YAML_MAP_TAG = "tag:yaml.org,2002:map"
+const YAML_DEFAULT_SCALAR_TAG = YAML_STR_TAG
 
 const YAMLEncoding = UInt32
 const YAML_ANY_ENCODING = 0
@@ -134,7 +125,7 @@ const YAML_SEQUENCE_NODE = 2
 const YAML_MAPPING_NODE = 3
 
 struct YAMLDocument
-    data::NTuple{104, UInt8}
+    data::NTuple{104,UInt8}
 end
 
 struct YAMLMark
@@ -177,7 +168,7 @@ struct YAMLMappingData
 end
 
 struct YAMLNodeData
-    data::NTuple{32, UInt8}
+    data::NTuple{32,UInt8}
 end
 
 struct YAMLNode
@@ -196,7 +187,7 @@ struct YAMLParser
     problem_mark::YAMLMark
     context::Cstring
     context_mark::YAMLMark
-    data::NTuple{392, UInt8}
+    data::NTuple{392,UInt8}
 end
 
 function Base.getproperty(x::Ptr{YAMLNodeData}, f::Symbol)
@@ -218,7 +209,10 @@ function yaml_document_delete(document)
 end
 
 function yaml_document_get_node(document, index)
-    @ccall libyaml.yaml_document_get_node(document::Ptr{YAMLDocument}, index::Cint)::Ptr{YAMLNode}
+    @ccall libyaml.yaml_document_get_node(
+        document::Ptr{YAMLDocument},
+        index::Cint,
+    )::Ptr{YAMLNode}
 end
 
 function yaml_document_get_root_node(document)
@@ -234,23 +228,40 @@ function yaml_parser_delete(parser)
 end
 
 function yaml_parser_set_input_string(parser, input, size)
-    @ccall libyaml.yaml_parser_set_input_string(parser::Ptr{YAMLParser}, input::Ptr{Cuchar}, size::Csize_t)::Cvoid
+    @ccall libyaml.yaml_parser_set_input_string(
+        parser::Ptr{YAMLParser},
+        input::Ptr{Cuchar},
+        size::Csize_t,
+    )::Cvoid
 end
 
 function yaml_parser_set_input_file(parser, file)
-    @ccall libyaml.yaml_parser_set_input_file(parser::Ptr{YAMLParser}, file::Ptr{Libc.FILE})::Cvoid
+    @ccall libyaml.yaml_parser_set_input_file(
+        parser::Ptr{YAMLParser},
+        file::Ptr{Libc.FILE},
+    )::Cvoid
 end
 
 function yaml_parser_set_input(parser, handler, data)
-    @ccall libyaml.yaml_parser_set_input(parser::Ptr{YAMLParser}, handler::Ptr{Cvoid}, data::Ptr{Cvoid})::Cvoid
+    @ccall libyaml.yaml_parser_set_input(
+        parser::Ptr{YAMLParser},
+        handler::Ptr{Cvoid},
+        data::Ptr{Cvoid},
+    )::Cvoid
 end
 
 function yaml_parser_set_encoding(parser, encoding)
-    @ccall libyaml.yaml_parser_set_encoding(parser::Ptr{YAMLParser}, encoding::YAMLEncoding)::Cvoid
+    @ccall libyaml.yaml_parser_set_encoding(
+        parser::Ptr{YAMLParser},
+        encoding::YAMLEncoding,
+    )::Cvoid
 end
 
 function yaml_parser_load(parser, document)
-    @ccall libyaml.yaml_parser_load(parser::Ptr{YAMLParser}, document::Ptr{YAMLDocument})::Cint
+    @ccall libyaml.yaml_parser_load(
+        parser::Ptr{YAMLParser},
+        document::Ptr{YAMLDocument},
+    )::Cint
 end
 
 include("ParserYAML.jl")
