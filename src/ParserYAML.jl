@@ -94,9 +94,9 @@ end
         return parse_sequence(doc_ref, node, ctx)
     elseif node_type == YAML_MAPPING_NODE
         return parse_mapping(doc_ref, node, ctx)
-    else
-        throw(YAMLError("Unsupported node type: $node_type"))
     end
+
+    throw(YAMLError("Unsupported node type: $node_type"))
 end
 
 @inline function parse_value(value, tag)
@@ -112,9 +112,9 @@ end
         parse_null(value)
     elseif tag == YAML_STR_TAG
         value
-    else
-        throw(YAMLError("Unknown YAML tag: $tag"))
     end
+
+    throw(YAMLError("Unknown YAML tag: $tag"))
 end
 
 @inline function parse_scalar(node::YAMLNode, ctx::FileContext)
