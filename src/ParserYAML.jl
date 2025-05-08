@@ -101,17 +101,17 @@ end
 
 @inline function parse_value(value, tag)
     if tag == YAML_BOOL_TAG
-        parse_bool(value)
+        return parse_bool(value)
     elseif tag == YAML_INT_TAG
-        parse_int(value)
+        return parse_int(value)
     elseif tag == YAML_FLOAT_TAG
-        parse_float(value)
+        return parse_float(value)
     elseif tag == YAML_TIMESTAMP_TAG
-        parse_timestamp(value)
+        return parse_timestamp(value)
     elseif tag == YAML_NULL_TAG || value in NULL_KEY_WORDS # Special case to parse if user didn't specify `!!null` tag.
-        parse_null(value)
+        return parse_null(value)
     elseif tag == YAML_STR_TAG
-        value
+        return value
     end
 
     throw(YAMLError("Unknown YAML tag: $tag"))
