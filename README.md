@@ -39,13 +39,12 @@ time: "2024-03-25T19:05:38.912"
 """
 
 julia> parse_yaml(yaml_str)
-1-element Vector{Dict{Any, Any}}:
- Dict(
-  "retExtInfo" => Dict{String, Any}(),
-  "time" => DateTime("2024-03-25T19:05:38.912"),
-  "retCode" => 0,
-  "retMsg" => "OK",
-  "result" => Dict{String, Any}("v" => 1.780835204e7, "ap" => 0.6636, "o" => 0.6337, "t" => DateTime("2024-03-25T19:05:35.491"), "qv" => 1.1594252877069e7, "bp" => 0.6634, "l" => 0.6315, "lp" => 0.6633, "h" => 0.6687, "s" => "ADAUSDT"…))
+Dict{String, Any} with 5 entries:
+  "retExtInfo" => Dict{String, Any}()
+  "time"       => "2024-03-25T19:05:38.912"
+  "retCode"    => "0"
+  "retMsg"     => "OK"
+  "result"     => Dict{String, Any}("v"=>"1.780835204e7", "ap"=>"0.6636", "o"=>"0.6337", "t"=>"2024-03-25T19:05:35.491", "qv"=>"1.15942…
 ```
 
 ## Useful Links
