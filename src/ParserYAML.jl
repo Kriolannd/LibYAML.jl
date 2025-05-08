@@ -125,7 +125,7 @@ end
     return parse_value(value, tag)
 end
 
-@inline function parse_scalar(node::YAMLNode, ctx::DefaultContext)
+@inline function parse_scalar(node::YAMLNode, ::DefaultContext)
     tag = unsafe_string(node.tag)
     value = unsafe_string(node.data.scalar.value)
 
@@ -190,6 +190,8 @@ end
         for submap in val
             merge!(yaml_dict, submap)
         end
+    else
+        throw(YAMLError("Cannot merge the following node type as an anchor: $type"))
     end
 
     return nothing
